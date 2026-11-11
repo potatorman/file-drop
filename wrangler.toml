@@ -1,0 +1,8 @@
+name = "file-drop"
+main = "src/index.js"
+compatibility_date = "2026-11-11"
+
+[vars]
+GITHUB_OWNER = "potatorman"
+GITHUB_REPO = "file-drop"
+GITHUB_BRANCH = "main"
