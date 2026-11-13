@@ -4,7 +4,7 @@ A Cloudflare Worker upload page that stores files in a GitHub repository and ret
 
 ## Is GitHub a good file store?
 
-Only for occasional, small uploads. This implementation caps files at **10 MiB** to keep Worker memory and GitHub API request sizes practical. GitHub's Contents API is intended for repository files, not bulk object storage: it has per-file constraints, every upload creates a commit, and uploads consume repository storage and API rate limits. GitHub documents a 100 MB per-file repository limit, with a 25 MiB limit for files uploaded through the web UI; the Contents API also has stricter practical behavior for large content. The service's lower limit is deliberate.
+Only for occasional, small uploads. This implementation caps files at **10 MiB** to keep Worker memory and GitHub API request sizes practical. GitHub's Contents API is intended for repository files, not bulk object storage: every upload creates a commit, and uploads consume repository storage and API rate limits. The service's lower limit is deliberate.
 
 The repository must be **public** for its returned direct links to open anonymously in ChatGPT. A private repository's raw URLs require GitHub authentication; exposing the Worker token through a public download proxy would make the files publicly readable anyway. Do not upload confidential files. Links are stable while the file and branch remain in place; deleting the file, renaming the repository, or renaming the branch breaks links.
 
@@ -14,7 +14,7 @@ GitHub receives one Contents API request per upload and commits each file. Norma
 
 - The browser UI asks for an upload key; the GitHub token is never sent to the browser.
 - Upload requires the `UPLOAD_KEY` Worker secret and rejects cross-origin POSTs.
-- The Worker accepts non-empty files up to 10 MiB with an explicit extension allowlist. The filename is normalized and stored beneath a random UUID path to prevent overwrites.
+- The Worker accepts any file extension and MIME type, provided the file is non-empty and no larger than 10 MiB. The filename is normalized and stored beneath a random UUID path to prevent overwrites.
 - The shared upload key is a simple bearer credential, not per-user authentication. Keep it private and rotate it if exposed. Set a Cloudflare rate limiting rule on `POST /api/upload` to reduce abuse and unexpected GitHub API use; the endpoint itself does not maintain per-client quotas.
 - Uploaded file content is not scanned. Public links expose the uploaded bytes to anyone who has the URL (and to anyone who can browse the public repository).
 
@@ -36,14 +36,14 @@ GitHub receives one Contents API request per upload and commits each file. Norma
    npx wrangler secret put UPLOAD_KEY
    ```
 
-   `GITHUB_OWNER`, `GITHUB_REPO`, and `GITHUB_BRANCH` are non-secret values in `wrangler.toml`; adjust them for your repository/branch.
+   `GITHUB_OWNER`, `GITHUB_REPO`, and `GITHUB_BRANCH` are non-secret values in `wrangler.toml`; adjust them for your repository/branch. The upload page asks for the value configured as `UPLOAD_KEY`; it is not your GitHub token.
 5. Deploy:
 
    ```sh
    npx wrangler deploy
    ```
 
-6. Open the Worker URL, enter the same upload key configured as `UPLOAD_KEY`, and choose a supported file. The result is a direct raw GitHub link. Open it in a private/incognito window to confirm anonymous access.
+6. Open the Worker URL, enter the upload key configured as `UPLOAD_KEY`, and choose any file type up to 10 MiB. The result is a direct raw GitHub link. Open it in a private/incognito window to confirm anonymous access.
 
 ## Local development
 
