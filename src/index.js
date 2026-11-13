@@ -6,7 +6,7 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === "/") return new Response(PAGE, { headers: { "content-type": "text/html; charset=utf-8" } });
     if (url.pathname === "/api/upload" && request.method === "POST") return upload(request, env);
-    return cors(Response.json({ error: "Not found" }, { status: 404 }));
+    return Response.json({ error: "Not found" }, { status: 404 });
   },
 };
 
@@ -64,7 +64,7 @@ function githubHeaders(env) {
 }
 
 function safeFilename(name) {
-  const normalized = name.normalize("NFKC").replace(/[\\\\/\\0\\r\\n]/g, "_").replace(/[^\\p{L}\\p{N}._ -]/gu, "_").trim().replace(/^\\.+/, "").slice(0, 120);
+  const normalized = name.normalize("NFKC").replace(/[\\/\0\r\n]/g, "_").replace(/[^\p{L}\p{N}._ -]/gu, "_").trim().replace(/^\.+/, "").slice(0, 120);
   return normalized || "upload.bin";
 }
 
